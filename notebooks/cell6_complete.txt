@@ -1,0 +1,69 @@
+## Cell 6: Processing Video with Moving Window Buffer
+
+```python
+# Process video and collect samples for visualization
+frame_idx = 0
+buffer_frames = []
+all_samples = []  # Store (buffer_num, position, frame) tuples
+
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+    
+    if frame_idx % frame_step == 0:
+        resized = cv2.resize(frame, (TARGET_WIDTH, TARGET_HEIGHT))
+        frame_hash = compute_perceptual_hash(resized)
+        
+        # Simple duplicate check
+        is_dup = any(frame_hash - h <= HASH_THRESHOLD for _, h in buffer_frames[-5:])
+        
+        if not is_dup and compute_brightness(resized) >= 30:
+            buffer_frames.append((resized.copy(), frame_hash))
+            pos = len(buffer_frames) - 1
+            
+            # Collect samples at beginning (0-9), mid (20-29), end (40-49)
+            if pos < 10 or (20 <= pos < 30) or (40 <= pos < 50):
+                buf_num = pos // BUFFER_SIZE
+                all_samples.append((buf_num, pos % BUFFER_SIZE, resized.copy()))
+    
+    frame_idx += 1
+
+cap.release()
+print(f"✓ Processed {frame_idx} frames, saved {len(buffer_frames)}")
+```
+
+## Visualization: 3 Buffers × 3 Sections × 10 Frames
+
+```python
+# Group by buffer
+from collections import defaultdict
+buffers = defaultdict(list)
+for b, p, f in all_samples:
+    buffers[b].append((p, f))
+
+# Show first 3 buffers
+for buf_num in sorted(buffers.keys())[:3]:
+    fig, axes = plt.subplots(3, 10, figsize=(20, 6))
+    fig.suptitle(f'Buffer {buf_num}', fontsize=14, fontweight='bold')
+    
+    for row, (name, start) in enumerate([('Begin', 0), ('Mid', 20), ('End', 40)]):
+        for col in range(10):
+            ax = axes[row, col]
+            pos = start + col
+            
+            # Find frame
+            frame = next((f for p, f in buffers[buf_num] if p == pos), None)
+            
+            if frame is not None:
+                small = cv2.resize(frame, (160, 90))
+                ax.imshow(cv2.cvtColor(small, cv2.COLOR_BGR2RGB))
+            else:
+                ax.text(0.5, 0.5, 'N/A', ha='center', va='center')
+            
+            ax.set_title(f'{name[:3]}-{col}', fontsize=8)
+            ax.axis('off')
+    
+    plt.tight_layout()
+    plt.show()
+```

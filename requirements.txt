@@ -1,0 +1,11 @@
+opencv-python
+numpy
+pandas
+torch==2.0.1 
+torchvision==0.15.2
+PyYAML
+matplotlib
+moviepy==1.0.3
+Pillow
+pyttsx3
+imagehash

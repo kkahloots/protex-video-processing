@@ -1,0 +1,19 @@
+# Folders
+/data/
+/traceables/
+/models/
+__pycache__/
+.vscode/
+.lh/*
+.history/*
+
+# Files
+*.csv
+*.out
+*.parquet
+*.xlsx
+*.json
+*.pkl
+*.pt
+*.ini
+*.zip

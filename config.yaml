@@ -1,0 +1,200 @@
+# Protex AI - Computer Vision Pipeline Configuration
+
+# =============================================================================
+# GLOBAL SETTINGS
+# =============================================================================
+defaults:
+  mode: "balanced"           # Options: fast | balanced | accurate
+  verbose: true              # Enable detailed logging
+  cleanup_mode: "off"        # Options: off | unused | all
+  clean_traceables: true          # Clean traceables folder before processing
+  data_dir: "data"           # Root directory for input data
+  output_root: "traceables"        # Root directory for all outputs
+
+# =============================================================================
+# STAGE 1: DATA PREPROCESSING
+# =============================================================================
+# Extracts and filters frames from raw video footage
+# 
+# Key parameters:
+#   - desired_fps: Target frame sampling rate (frames/second)
+#   - duplicate_threshold: Perceptual hash difference (0-64 for 8x8 hash)
+#                         Lower = stricter deduplication, fewer similar frames
+#                         0 = identical, 64 = completely different
+#   - min_brightness: Minimum mean pixel intensity (0-255)
+#                    Computed as mean(grayscale_image)
+#   - min_laplacian_var: Minimum Laplacian variance for blur detection
+#                       Higher = sharper images required
+#                       Domain-dependent: tune on sample frames
+# 
+# Filtering hierarchy:
+#   1. Black frames (mean < 5): Camera glitches, complete darkness
+#   2. Dark frames: Too low SNR for reliable detection
+#   3. Blurry frames: Motion blur, out-of-focus
+#   4. Duplicates: Consecutive similar frames (static scenes)
+#
+# Auto-calibration: Run utils/calibrate_thresholds.py to compute optimal
+# thresholds based on your video's brightness/blur distribution
+# =============================================================================
+
+# Define common preprocessing defaults using YAML anchor
+preprocessing_defaults: &preprocess_defaults
+  duplicate_threshold: 5
+  min_brightness: 20.0
+  min_laplacian_var: 30.0
+  noise_std_threshold: 50.0              # Std dev threshold for noise detection (stricter)
+  noise_edge_density_threshold: 0.25     # Edge density threshold (0-1, stricter)
+
+preprocessing:
+  video_path: "${data_dir}/timelapse_test.mp4"  # Supports variable substitution
+  output_dir: "${output_root}/frames"
+  mask_path: null                                # Optional: path to static mask (white=keep, black=remove)
+  target_width: 960
+  target_height: 544
+  seed: 42                                       # Random seed for reproducibility
+  
+  modes:
+    fast:
+      <<: *preprocess_defaults           # Inherit defaults
+      desired_fps: 0.5                   # Aggressive sampling for high-traffic sites
+      duplicate_threshold: 3             # Override: very strict (remove very similar)
+      min_brightness: 35.0               # Override: daylight-only (outdoor)
+      min_laplacian_var: 60.0            # Override: high quality only
+      noise_std_threshold: 45.0          # Override: very strict noise filter
+      noise_edge_density_threshold: 0.20 # Override: very aggressive
+      
+    balanced:
+      <<: *preprocess_defaults           # Inherit all defaults
+      desired_fps: 0.8                   # Standard annotation pipeline
+      duplicate_threshold: 6            # Disabled (64 = max for 8x8 hash)
+      noise_std_threshold: 50.0          # Relaxed noise filter
+      noise_edge_density_threshold: 0.35 # Relaxed edge density
+      
+    accurate:
+      <<: *preprocess_defaults           # Inherit defaults
+      desired_fps: 3.0                   # Dense sampling for critical areas
+      duplicate_threshold: 8             # Override: keep more similar frames
+      min_brightness: 25.0               # Override: accept low-light (24/7 coverage)
+      min_laplacian_var: 40.0            # Override: accept lower sharpness
+      noise_std_threshold: 55.0          # Override: lenient noise filter
+      noise_edge_density_threshold: 0.30 # Override: less aggressive
+
+# =============================================================================
+# STAGE 2: DATA PRE-TAGGING
+# =============================================================================
+# Runs object detection model on filtered frames
+# 
+# Key parameters:
+#   - model_name: Detector architecture (fasterrcnn_resnet50_fpn, etc.)
+#   - batch_size: Images per GPU batch (tune based on VRAM)
+#   - max_images: Maximum frames to process (0 = no limit)
+#   - min_confidence: Detection confidence threshold (0-1)
+#                    Lower = more detections (higher recall, more false positives)
+#   - nms_iou_threshold: Non-Maximum Suppression IoU threshold (0-1)
+#                       Lower = fewer overlapping boxes (aggressive NMS)
+#                       Higher = keep more overlapping boxes
+#                       fast: 0.3, balanced: 0.5, accurate: 0.7
+# 
+# Note: At scale, consider exporting to ONNX/TensorRT or YOLOv8 for speed
+# =============================================================================
+
+pretagging_defaults: &pretag_defaults
+  min_confidence: 0.6
+  nms_iou_threshold: 0.5
+
+pretagging:
+  images_dir: "${output_root}/frames"
+  output_dir: "${output_root}/pre_tags"
+  model_name: "fasterrcnn_resnet50_fpn"
+  batch_size: 64
+  max_images: 0                          # 0 = process all frames
+  
+  modes:
+    fast:
+      <<: *pretag_defaults
+      min_confidence: 0.7                # Higher precision, lower recall
+      nms_iou_threshold: 0.3             # Aggressive NMS
+      
+    balanced:
+      <<: *pretag_defaults               # Use defaults (0.6 conf, 0.5 NMS)
+      
+    accurate:
+      <<: *pretag_defaults
+      min_confidence: 0.5                # Higher recall, more false positives
+      nms_iou_threshold: 0.7             # Keep more overlapping boxes
+
+# =============================================================================
+# STAGE 3: PRE-TAG CLEANUP
+# =============================================================================
+# Filters detections based on confidence, area, and class-specific rules
+# 
+# Key parameters:
+#   - min_area: Minimum bounding box area (pixels²)
+#              Filters out tiny/distant objects
+#   - min_score: Minimum detection confidence (post-detection filter)
+#   - person_class_id: COCO class ID for person (1 for standard COCO)
+#   - min_area_person: Minimum area for person detections (pixels²)
+#                     Separate threshold for human safety focus
+# 
+# Note: Ensure person_class_id matches your model's label order
+# TODO: Support multi-class filtering with per-class thresholds
+# =============================================================================
+
+cleanup_defaults: &cleanup_defaults
+  min_area: 1000.0
+  min_score: 0.6
+  min_area_person: 300.0
+
+cleanup:
+  input_json: "${output_root}/pre_tags/pre_tags_raw.json"
+  output_json: "${output_root}/pre_tags/pre_tags_cleaned.json"
+  images_dir: "${output_root}/frames"
+  person_class_id: 1                     # COCO person class
+  
+  modes:
+    fast:
+      <<: *cleanup_defaults
+      min_area: 2000.0                   # Override: larger objects only
+      min_score: 0.7                     # Override: high confidence
+      min_area_person: 500.0             # Override: larger persons only
+      
+    balanced:
+      <<: *cleanup_defaults              # Use all defaults
+      
+    accurate:
+      <<: *cleanup_defaults
+      min_area: 500.0                    # Override: smaller objects
+      min_score: 0.5                     # Override: lower confidence
+      min_area_person: 200.0             # Override: smaller persons
+
+# =============================================================================
+# STAGE 4: SAMPLE GENERATION
+# =============================================================================
+# Creates annotated image samples for QA and stakeholder review
+# 
+# Key parameters:
+#   - num_samples: Number of random frames to annotate
+#   - seed: Random seed for reproducibility
+# 
+# Output: Frames with bounding boxes drawn for visual inspection
+# =============================================================================
+
+samples:
+  input_json: "${output_root}/pre_tags/pre_tags_cleaned.json"
+  images_dir: "${output_root}/frames"
+  samples_dir: "${output_root}/samples"
+  num_samples: 20
+  seed: 42                               # Ensures reproducible sample selection
+
+# =============================================================================
+# ADVANCED TUNING (Optional)
+# =============================================================================
+
+# Adaptive Thresholds: Auto-calibrate based on video analysis
+# When enabled, preprocessing automatically analyzes video quality distribution
+# and computes optimal thresholds before frame extraction
+adaptive_thresholds:
+  enabled: false                        # Set to true to enable auto-calibration
+  sample_size: 100                       # Frames to analyze for statistics
+  brightness_percentile: 10              # Use 10th percentile as min_brightness
+  blur_percentile: 15                    # Use 15th percentile as min_laplacian_var

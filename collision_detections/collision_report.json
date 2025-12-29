@@ -1,0 +1,105 @@
+{
+  "total_collisions": 10,
+  "detections": [
+    {
+      "id": 1,
+      "image": "frame_00003.jpg",
+      "objects": [
+        "car",
+        "car"
+      ],
+      "reason": "Vehicle-vehicle proximity - distance: 80px",
+      "output": "collision_detections/collision_01_frame_00003.jpg"
+    },
+    {
+      "id": 2,
+      "image": "frame_00009.jpg",
+      "objects": [
+        "car",
+        "car"
+      ],
+      "reason": "Vehicle-vehicle proximity - distance: 57px",
+      "output": "collision_detections/collision_02_frame_00009.jpg"
+    },
+    {
+      "id": 3,
+      "image": "frame_00010.jpg",
+      "objects": [
+        "person",
+        "person"
+      ],
+      "reason": "Person crowding - distance: 17px",
+      "output": "collision_detections/collision_03_frame_00010.jpg"
+    },
+    {
+      "id": 4,
+      "image": "frame_00014.jpg",
+      "objects": [
+        "person",
+        "person"
+      ],
+      "reason": "Person crowding - distance: 28px",
+      "output": "collision_detections/collision_04_frame_00014.jpg"
+    },
+    {
+      "id": 5,
+      "image": "frame_00015.jpg",
+      "objects": [
+        "person",
+        "person"
+      ],
+      "reason": "Person crowding - distance: 5px",
+      "output": "collision_detections/collision_05_frame_00015.jpg"
+    },
+    {
+      "id": 6,
+      "image": "frame_00018.jpg",
+      "objects": [
+        "bus",
+        "person"
+      ],
+      "reason": "Large vehicle near person - distance: 82px",
+      "output": "collision_detections/collision_06_frame_00018.jpg"
+    },
+    {
+      "id": 7,
+      "image": "frame_00019.jpg",
+      "objects": [
+        "car",
+        "person"
+      ],
+      "reason": "Person near vehicle - distance: 113px",
+      "output": "collision_detections/collision_07_frame_00019.jpg"
+    },
+    {
+      "id": 8,
+      "image": "frame_00020.jpg",
+      "objects": [
+        "person",
+        "person"
+      ],
+      "reason": "Person crowding - distance: 9px",
+      "output": "collision_detections/collision_08_frame_00020.jpg"
+    },
+    {
+      "id": 9,
+      "image": "frame_00023.jpg",
+      "objects": [
+        "person",
+        "car"
+      ],
+      "reason": "Person near vehicle - distance: 123px",
+      "output": "collision_detections/collision_09_frame_00023.jpg"
+    },
+    {
+      "id": 10,
+      "image": "frame_00024.jpg",
+      "objects": [
+        "person",
+        "car"
+      ],
+      "reason": "Person near vehicle - distance: 66px",
+      "output": "collision_detections/collision_10_frame_00024.jpg"
+    }
+  ]
+}

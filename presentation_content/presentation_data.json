@@ -1,0 +1,131 @@
+{
+  "presentation_title": "Protex AI - Industrial Safety Computer Vision Pipeline",
+  "total_slides": 12,
+  "total_duration_seconds": 103,
+  "slides": [
+    {
+      "slide_number": 1,
+      "title": "Protex AI: Industrial Safety Computer Vision Pipeline",
+      "content": "Kal Kahloot \u2013 Engineering Manager Assignment\n\nStory: From 24h of raw timelapse factory footage to a curated,\nannotator-ready dataset using a 4-stage, production-oriented\nCV pipeline for industrial safety monitoring.",
+      "duration": 10,
+      "image_reference": null
+    },
+    {
+      "slide_number": 2,
+      "title": "Business & Safety Context",
+      "content": "Street monitoring systems capture traffic, pedestrians, and vehicles.\n\nCCTV cameras are already there:\n        \u2022 24h feeds generate huge volumes of video\n        \u2022 Most frames are routine, a few contain risky behaviours\n        \u2022 We want traffic violations and unsafe patterns surfaced quickly",
+      "duration": 9,
+      "image_reference": null
+    },
+    {
+      "slide_number": 3,
+      "title": "The Scale Problem: 24h Video",
+      "content": "A single 24-hour camera feed at 0.1 FPS yields thousands of frames.\n\nNaive manual workflow:\n        \u2022 Export all frames\n        \u2022 Manually draw boxes on every candidate object\n        \u2022 Repeat for every camera, every day\n\nResult: annotation spirals out of control as we add more cameras.",
+      "duration": 10,
+      "image_reference": null
+    },
+    {
+      "slide_number": 4,
+      "title": "What We Actually Want",
+      "content": "Safety teams do not want raw frames \u2013 they want structured signals:\n        \u2022 Clips where people and vehicles interact in risky ways\n        \u2022 Evidence for near-misses and policy violations\n        \u2022 Clear, auditable datasets to fine-tune detection models\n\nOur job: turn always-on video into a targeted, annotator-friendly dataset.",
+      "duration": 9,
+      "image_reference": null
+    },
+    {
+      "slide_number": 5,
+      "title": "Pipeline Overview \u2013 4 Stages",
+      "content": "Stage 1 \u2013 Preprocessing: video \u2192 cleaned frames\nStage 2 \u2013 Pre-tagging: frames \u2192 COCO detections\nStage 3 \u2013 Cleanup: raw pre-tags \u2192 filtered COCO\nStage 4 \u2013 Sampling & Report: curated clips + MD report\n\nEach stage is config-driven, logged, and can be tuned per client site.",
+      "duration": 9,
+      "image_reference": null
+    },
+    {
+      "slide_number": 6,
+      "title": "Stage 1: Preprocessing",
+      "content": "60-80% frame reduction via FPS sampling, brightness, blur, duplicates",
+      "duration": 8,
+      "image_reference": "docs/imgs/stage1.png"
+    },
+    {
+      "slide_number": 7,
+      "title": "Stage 2: Pre-tagging",
+      "content": "Faster R-CNN inference with batch processing and GPU acceleration",
+      "duration": 8,
+      "image_reference": "docs/imgs/stage2.png"
+    },
+    {
+      "slide_number": 8,
+      "title": "Stage 3: Cleanup",
+      "content": "Class-aware filtering: People 300px\u00b2, Equipment 1000px\u00b2",
+      "duration": 8,
+      "image_reference": "docs/imgs/stage3.png"
+    },
+    {
+      "slide_number": 9,
+      "title": "Stage 1 \u2013 Preprocessing (Video \u2192 Frames)",
+      "content": "Ref: data_preprocessing.py\nResponsibilities:\n        \u2022 Sample frames at mode-dependent FPS (fast / balanced / accurate)\n        \u2022 Drop dark, blurry, noisey, and duplicated frames\n        \u2022 Apply static masks to ignore irrelevant regions\n        \u2022 Standardize resolution and generate frames_metadata.json",
+      "duration": 9,
+      "image_reference": null
+    },
+    {
+      "slide_number": 10,
+      "title": "Stage 1 \u2013 Results: 99.3% Reduction",
+      "content": "This dataset:\n        \u2022 Input: 4,077 video frames (32 FPS)\n        \u2022 Sampled: Every 40 frames (0.8 FPS)\n        \u2022 Output: 27 filtered frames\n        \u2022 Reduction: 99.3%\n\nFilters removed:\n        \u2022 71 duplicates, 4 noise frames\n\nResult: Only quality frames sent to GPU",
+      "duration": 9,
+      "image_reference": null
+    },
+    {
+      "slide_number": 11,
+      "title": "Business Impact: Real Numbers",
+      "content": "This dataset: 27 images, 45 annotations\n\nEstimated annotation time:\n    - Manual (no pre-tags): ~10 min/image = 4.5h\n    - With pre-tagging: ~5 min/image = 2.3h\n    - Time savings: 2.2h (49% reduction)\n\nCost savings @ $50/hour:\n    - Per dataset: $110 saved\n    - At 1000 cameras/day: $110K/day\n    - Annual: $40M/year",
+      "duration": 8,
+      "image_reference": null
+    },
+    {
+      "slide_number": 12,
+      "title": "Thank You",
+      "content": "Protex AI: Making Industrial Workplaces Safer\n\nKey takeaways:\n        1. Config-driven: Per-client tuning, no code changes\n        2. Safety-focused: 10 relevant classes, not 80\n        3. Production-ready: Single script, full tracking\n        4. Scale-aware: $40M/year savings at 1000 cameras\n\nReady to discuss PRODUCTIONIZATION!",
+      "duration": 6,
+      "image_reference": null
+    }
+  ],
+  "statistics": {
+    "num_images": 27,
+    "num_annotations": 45,
+    "avg_per_image": 1.67,
+    "class_dist": {
+      "person": [
+        23,
+        51.1
+      ],
+      "car": [
+        16,
+        35.6
+      ],
+      "truck": [
+        3,
+        6.7
+      ],
+      "bus": [
+        3,
+        6.7
+      ]
+    },
+    "total_classes": 4,
+    "pipeline": {
+      "stage1_saved": 27,
+      "stage1_total": 4077,
+      "stage1_reduction": 99.3,
+      "stage2_raw": 1009,
+      "stage2_kept": 128,
+      "stage3_kept": 45,
+      "stage3_removed": 83
+    },
+    "quality": {
+      "avg_bbox_area": 5227.2,
+      "avg_confidence": 0.87,
+      "low_conf_count": 0
+    },
+    "images_with_anns": 19,
+    "high_activity": 0
+  }
+}

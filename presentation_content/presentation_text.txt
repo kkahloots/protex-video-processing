@@ -1,0 +1,163 @@
+================================================================================
+PROTEX AI - PRESENTATION CONTENT
+================================================================================
+
+
+================================================================================
+SLIDE 1: Protex AI: Industrial Safety Computer Vision Pipeline
+Duration: 10 seconds
+================================================================================
+
+Kal Kahloot – Engineering Manager Assignment
+
+Story: From 24h of raw timelapse factory footage to a curated,
+annotator-ready dataset using a 4-stage, production-oriented
+CV pipeline for industrial safety monitoring.
+
+
+================================================================================
+SLIDE 2: Business & Safety Context
+Duration: 9 seconds
+================================================================================
+
+Street monitoring systems capture traffic, pedestrians, and vehicles.
+
+CCTV cameras are already there:
+        • 24h feeds generate huge volumes of video
+        • Most frames are routine, a few contain risky behaviours
+        • We want traffic violations and unsafe patterns surfaced quickly
+
+
+================================================================================
+SLIDE 3: The Scale Problem: 24h Video
+Duration: 10 seconds
+================================================================================
+
+A single 24-hour camera feed at 0.1 FPS yields thousands of frames.
+
+Naive manual workflow:
+        • Export all frames
+        • Manually draw boxes on every candidate object
+        • Repeat for every camera, every day
+
+Result: annotation spirals out of control as we add more cameras.
+
+
+================================================================================
+SLIDE 4: What We Actually Want
+Duration: 9 seconds
+================================================================================
+
+Safety teams do not want raw frames – they want structured signals:
+        • Clips where people and vehicles interact in risky ways
+        • Evidence for near-misses and policy violations
+        • Clear, auditable datasets to fine-tune detection models
+
+Our job: turn always-on video into a targeted, annotator-friendly dataset.
+
+
+================================================================================
+SLIDE 5: Pipeline Overview – 4 Stages
+Duration: 9 seconds
+================================================================================
+
+Stage 1 – Preprocessing: video → cleaned frames
+Stage 2 – Pre-tagging: frames → COCO detections
+Stage 3 – Cleanup: raw pre-tags → filtered COCO
+Stage 4 – Sampling & Report: curated clips + MD report
+
+Each stage is config-driven, logged, and can be tuned per client site.
+
+
+================================================================================
+SLIDE 6: Stage 1: Preprocessing
+Duration: 8 seconds
+================================================================================
+
+60-80% frame reduction via FPS sampling, brightness, blur, duplicates
+
+[IMAGE: docs/imgs/stage1.png]
+
+
+================================================================================
+SLIDE 7: Stage 2: Pre-tagging
+Duration: 8 seconds
+================================================================================
+
+Faster R-CNN inference with batch processing and GPU acceleration
+
+[IMAGE: docs/imgs/stage2.png]
+
+
+================================================================================
+SLIDE 8: Stage 3: Cleanup
+Duration: 8 seconds
+================================================================================
+
+Class-aware filtering: People 300px², Equipment 1000px²
+
+[IMAGE: docs/imgs/stage3.png]
+
+
+================================================================================
+SLIDE 9: Stage 1 – Preprocessing (Video → Frames)
+Duration: 9 seconds
+================================================================================
+
+Ref: data_preprocessing.py
+Responsibilities:
+        • Sample frames at mode-dependent FPS (fast / balanced / accurate)
+        • Drop dark, blurry, noisey, and duplicated frames
+        • Apply static masks to ignore irrelevant regions
+        • Standardize resolution and generate frames_metadata.json
+
+
+================================================================================
+SLIDE 10: Stage 1 – Results: 99.3% Reduction
+Duration: 9 seconds
+================================================================================
+
+This dataset:
+        • Input: 4,077 video frames (32 FPS)
+        • Sampled: Every 40 frames (0.8 FPS)
+        • Output: 27 filtered frames
+        • Reduction: 99.3%
+
+Filters removed:
+        • 71 duplicates, 4 noise frames
+
+Result: Only quality frames sent to GPU
+
+
+================================================================================
+SLIDE 11: Business Impact: Real Numbers
+Duration: 8 seconds
+================================================================================
+
+This dataset: 27 images, 45 annotations
+
+Estimated annotation time:
+    - Manual (no pre-tags): ~10 min/image = 4.5h
+    - With pre-tagging: ~5 min/image = 2.3h
+    - Time savings: 2.2h (49% reduction)
+
+Cost savings @ $50/hour:
+    - Per dataset: $110 saved
+    - At 1000 cameras/day: $110K/day
+    - Annual: $40M/year
+
+
+================================================================================
+SLIDE 12: Thank You
+Duration: 6 seconds
+================================================================================
+
+Protex AI: Making Industrial Workplaces Safer
+
+Key takeaways:
+        1. Config-driven: Per-client tuning, no code changes
+        2. Safety-focused: 10 relevant classes, not 80
+        3. Production-ready: Single script, full tracking
+        4. Scale-aware: $40M/year savings at 1000 cameras
+
+Ready to discuss PRODUCTIONIZATION!
